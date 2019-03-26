@@ -1,0 +1,50 @@
+body {
+  font-family: "Segoe UI", "Lucida Grande", Tahoma, sans-serif;
+  font-size: 100%;
+}
+#status {
+  /* avoid an excessively wide status text */
+  white-space: pre;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  max-width: 400px;
+}
+#jsonpad {
+  max-height: 100px;
+  font-size: 10px;
+  overflow-y: auto;
+  width: 100%;
+  overflow-x: hidden;
+  word-break: break-all;
+  white-space: pre-wrap;
+}
+
+.button-c {
+  display: flex;
+  flex-direction: row;
+}
+
+.button {
+  padding: 10px;
+  border-radius: 6px;
+  background-color: #CCCCCC;
+  border: solid 1px;
+  border-color: #EEEEEE;
+  margin-right: 10px;
+}
+
+.button:hover {
+  text-shadow: 0px 0px 1px #333333;
+  border-color: #333333;
+  cursor: pointer;
+}
+
+.header {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.header > h3 {
+  flex: 1;
+}

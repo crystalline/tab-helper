@@ -1,0 +1,24 @@
+{
+  "manifest_version": 2,
+
+  "name": "Tab Helper",
+  "description": "Custom tab helper for Chromium",
+  "version": "0.1",
+
+  "options_page": "options.html",
+
+  "browser_action": {
+    "default_icon": "icon.png"
+  },
+
+  "background": {
+    "scripts": ["background.js"]
+  },
+  
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "storage",
+    "unlimitedStorage"
+  ]
+}
