@@ -33,13 +33,46 @@ body {
   margin-right: 10px;
 }
 
-.button:hover {
+.label {
+  padding: 10px;
+  border-radius: 6px;
+  background-color: #CCCCCC;
+  margin-right: 10px;
+}
+
+.green {
+  background-color: #99FF99;
+}
+
+.red {
+  background-color: #FF9999;
+}
+
+.button:hover, .small-button:hover {
   text-shadow: 0px 0px 1px #333333;
   border-color: #333333;
   cursor: pointer;
 }
 
-.header {
+.small-button {
+  padding: 3px 5px;
+  border-radius: 3px;
+  background-color: #CCCCCC;
+  border: solid 1px;
+  border-color: #EEEEEE;
+  margin-right: 10px;
+  display: inline-block;
+}
+
+.small-label {
+  padding: 3px 5px;
+  border-radius: 3px;
+  background-color: #CCCCCC;
+  margin-right: 10px;
+  display: inline-block;
+}
+
+.header, .tab-gr-header {
   display: flex;
   justify-content: flex-start;
   align-items: center;
@@ -47,4 +80,24 @@ body {
 
 .header > h3 {
   flex: 1;
+}
+
+.group {
+  padding: 10px;
+  background-color: #EFEFEF;
+  display: inline-block;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.tab-link {
+  text-decoration: none;
+}
+
+.tab-link:hover {
+  text-decoration: underline;
+}
+
+.tab-item {
+  margin: 2px 0;
 }
