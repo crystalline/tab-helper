@@ -98,9 +98,8 @@ class App {
   
   removeTabGroupPopup(id, doneCb) {
     id = +id;
-    pr(1);
     this.displayPopup.push({
-      header: `Delete tab group of ${this.tabs.find(g => g.id === id).tabs.length} tabs?`,
+      header: `Delete tab group of <b class='red-t' style='padding: 0 5px;'>${this.tabs.find(g => g.id === id).tabs.length}</b> tabs?`,
       handler: action => {
         if (action === 'OK') {
           deleteByKey(this.tabs, 'id', id);
@@ -110,6 +109,24 @@ class App {
           doneCb && doneCb();
         }
       }
+    });
+    this.render();
+  };
+  
+  restoreTabGroup(id, doneCb) {
+    id = +id;
+    const tg = this.tabs.find(g => g.id === id);
+    chrome.windows.create({
+      url: tg.tabs.map(t => t.url)
+    }, doneCb);
+  };
+  
+  exportTabGroupPopup(id, doneCb) {
+    id = +id;
+    const tg = this.tabs.find(g => g.id === id);
+    this.displayPopup.push({
+      header: 'Export',
+      body: `<pre>${JSON.stringify(tg, null, 2)}</pre>`
     });
     this.render();
   };
@@ -205,7 +222,7 @@ function render(model, mountNode) {
       <div class='popup-c'>
         <div class='popup-fs'>
           <div class='popup-header'>${p.header || 'popup'}</div>
-          ${p.text ? `<div class='popup-text'>${p.text}</div>` : ''}
+          ${p.body ? `<div class='popup-body'>${p.body}</div>` : ''}
           <div class='popup-actions'>
             ${actions.map((a,i) => `<div data-action="${a}" class="${'action action-'+i}">${a}</div>`).join(' ')}
           </div>
@@ -236,10 +253,20 @@ function render(model, mountNode) {
   attachHandlers({
     '#savetabs': () => {model.saveTabs();},
     '.b-delete': (ev) => {
-      ev.stopPropagation();
-      pr(ev.target.getAttribute('data-id'));
-      model.removeTabGroupPopup(ev.target.getAttribute('data-id'));
-     }
+      const id = ev.target.getAttribute('data-id');
+      pr(id);
+      model.removeTabGroupPopup(id);
+     },
+    '.b-restore': (ev) => {
+      const id = ev.target.getAttribute('data-id');
+      pr(id);
+      model.restoreTabGroup(id);
+    },
+    '.b-export': (ev) => {
+      const id = ev.target.getAttribute('data-id');
+      pr(id);
+      model.exportTabGroupPopup(id);
+    }
   });
   
   if (model.displayPopup.length) {
@@ -261,19 +288,7 @@ function startApp() {
   
   const model = new App();
   window.model = model;
-  
-  model.tabs = [
-  /*
-    {
-     date: Date.now(),
-     tabs: [
-      {url: 'https://example.com', title: 'example'},
-      {url: 'https://wikipedia.com', title: 'wikipedia'},
-     ]
-    }
-  */
-  ];
-  
+    
   model.connectRenderer(render, $('#root-node')[0]);
   
   model.render();
