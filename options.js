@@ -14,6 +14,15 @@ function formatDate(d) {
   return `${d.getDay()} ${months[d.getMonth()]} ${d.getFullYear()}, ${d.getHours().toString().padStart(2)}:${d.getMinutes().toString().padStart(2)}:${d.getSeconds().toString().padStart(2)}`;
 }
 
+function deleteByKey(arr, key, val) {
+  for (var i=0; i<arr.length; i++) {
+    if (arr[i] && arr[i][key] === val) {
+      arr.splice(i, 1);
+      break;
+    }
+  }
+}
+
 function pick(obj, keys) {
   var ret = {};
   for (var i=0; i<keys.length; i++) {
@@ -29,7 +38,7 @@ class App {
     this.options = {};
     this.renderer = () => {};
     this.synced = false;
-    this.displayPopup = false;
+    this.displayPopup = [];
   }
   
   connectRenderer(renderer, mountNode) {
@@ -51,10 +60,20 @@ class App {
     });
   }
   
+  resync(doneCb) {
+    this.synced = false;
+    this.render();
+    this.sync(() => {
+      this.render();
+    });
+    doneCb && doneCb(this);
+  };
+  
   restore(doneCb) {
     restoreFromKey('tab-helper-data', (val, err) => {
-      pr(val,err);
+      pr(val, err);
       if (!err) {
+        val = val || {};
         Object.assign(this, val);
         this.synced = true;
       }
@@ -65,16 +84,34 @@ class App {
   saveTabs(doneCb) {
     getTabs((newTabs => {
       Object.keys(newTabs).forEach(windowId => {
-        const tabGroup = {windowId: windowId, date: Date.now(), tabs: newTabs[windowId]};
+        const tabGroup = {
+          id: (this.tabs[0] && this.tabs[0].id) ? this.tabs[0].id+1 : 0,
+          windowId: windowId,
+          date: Date.now(),
+          tabs: newTabs[windowId]
+        };
         this.tabs.push(tabGroup);
       });
-      this.synced = false;
-      this.render();
-      this.sync(() => {
-        this.render();
-      });
-      doneCb && doneCb(this);
+      this.resync(doneCb);
     }));
+  };
+  
+  removeTabGroupPopup(id, doneCb) {
+    id = +id;
+    pr(1);
+    this.displayPopup.push({
+      header: `Delete tab group of ${this.tabs.find(g => g.id === id).tabs.length} tabs?`,
+      handler: action => {
+        if (action === 'OK') {
+          deleteByKey(this.tabs, 'id', id);
+          pr(this.tabs);
+          this.resync(doneCb);
+        } else {
+          doneCb && doneCb();
+        }
+      }
+    });
+    this.render();
   };
 }
 
@@ -91,8 +128,6 @@ function restoreFromKey(key, doneCb) {
     doneCb && doneCb(val && val[key], err);
   }); 
 }
-
-const model = new App();
 
 function copyToClipboard(text) {
   const input = document.createElement('input');
@@ -128,15 +163,6 @@ function $(sel) {
   return document.querySelectorAll(sel);
 }
 
-function getSavedSession(data) {
-  return JSON.stringify({
-    type: 'session',
-    date: Date.now(),
-    version: settings.version,
-    data: data || window.tabData
-  })
-}
-
 function attachHandlers(desc) {
   Object.keys(desc).forEach(sel => {
     Array.from($(sel)).forEach(node => {
@@ -152,30 +178,14 @@ function render(model, mountNode) {
   let tabListView = '';
   
   model.tabs.forEach(tabGroup => {
-    let popup = '';
-    
-    if (this.displayPopup) {
-      const actions = this.displayPopup.actions || ['ok', 'cancel']
-      popup = `
-        <div class='popup-fs'>
-          <div class='popup-header'></div>
-          <div class='popup-text'></div>
-          <div class='popup-actions'>
-            ${actions.map(a => `<div data-action="${a}"class='action'>${a}</div>`).join(' ')}
-          </div>
-        </div>
-      `
-    }
-    
     tabListView += `
-      ${popup}
-      <div class="tab-gr-c">
+      <div class="tab-gr-c" data-id="${tabGroup.id}">
       <div class="tab-gr group">
         <div class="tab-gr-header">
           <div class="small-label">${formatDate(tabGroup.date)}</div>
-          <div class="small-button">Restore</div>
-          <div class="small-button">Export</div>
-          <div class="small-button">Delete</div>
+          <div class="b-restore small-button" data-id="${tabGroup.id}">Restore</div>
+          <div class="b-export small-button" data-id="${tabGroup.id}">Export</div>
+          <div class="b-delete small-button" data-id="${tabGroup.id}">Delete</div>
         </div>
         <div class="tab-gr-list">`;
     
@@ -185,8 +195,27 @@ function render(model, mountNode) {
     
     tabListView += `</div></div></div>`;
   });
+
+  let popup = '';
+  
+  if (this.displayPopup.length) {
+    const p = this.displayPopup[0];
+    const actions = p.actions || ['OK', 'Cancel']
+    popup = `
+      <div class='popup-c'>
+        <div class='popup-fs'>
+          <div class='popup-header'>${p.header || 'popup'}</div>
+          ${p.text ? `<div class='popup-text'>${p.text}</div>` : ''}
+          <div class='popup-actions'>
+            ${actions.map((a,i) => `<div data-action="${a}" class="${'action action-'+i}">${a}</div>`).join(' ')}
+          </div>
+        </div>
+      </div>
+    `
+  }
   
   mountNode.innerHTML = `
+  ${popup}
   <div class='header'>
     <h3>Tab Helper</h3>
     <div class='button-c'>
@@ -205,11 +234,34 @@ function render(model, mountNode) {
 ` ;
 
   attachHandlers({
-    '#savetabs': () => {model.saveTabs();}
+    '#savetabs': () => {model.saveTabs();},
+    '.b-delete': (ev) => {
+      ev.stopPropagation();
+      pr(ev.target.getAttribute('data-id'));
+      model.removeTabGroupPopup(ev.target.getAttribute('data-id'));
+     }
   });
+  
+  if (model.displayPopup.length) {
+    attachHandlers({
+      '.popup-actions': (e) => {
+        const action = e.target.getAttribute('data-action');
+        pr('popup action', action);
+        
+        this.displayPopup[0].handler && this.displayPopup[0].handler(action);
+        
+        this.displayPopup.pop();
+        this.render();
+      }
+    });
+  }
 }
 
 function startApp() {
+  
+  const model = new App();
+  window.model = model;
+  
   model.tabs = [
   /*
     {
