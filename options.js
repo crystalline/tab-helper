@@ -6,6 +6,13 @@ const settings = {
   version: '0.1.0'  
 }
 
+class Component {
+  constructor () {
+    
+  } 
+  _render() {}
+}
+
 function formatDate(d) {
   if (typeof d === 'number') {
     d = new Date(d);
@@ -235,7 +242,9 @@ function render(model, mountNode) {
   ${popup}
   <div class='header'>
     <h3>Tab Helper</h3>
-    <div class='button-c'>
+    <div class='button-c' style='flex: 1'>
+      <div class='icon-c pointer'><img style='height: 34px; width: 34px;' src="search.svg" /></div>
+      <input type='text' class='search field' style='flex: 1'></input>
       <div class='button' id='savetabs'>Save all tabs</div>
       <div class='button' id='savetabs-novel'>Save only new tabs</div>
       <div class='button' id='export'>Export</div>

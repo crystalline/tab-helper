@@ -4,6 +4,10 @@ body, html {
   margin: 0;
 }
 
+textarea:focus, input:focus{
+    outline: none;
+}
+
 body {
   font-family: "Verdana";
   font-size: 100%;
@@ -38,6 +42,18 @@ body {
   border: solid 1px;
   border-color: #EEEEEE;
   margin-right: 10px;
+}
+
+.field {
+  display: inline-block;
+  padding: 10px;
+  border-radius: 6px;
+  background-color: #FFFFFF;
+  border: solid 1px;
+  border-color: #999999;
+  margin-right: 10px;
+  min-width: 70px;
+  font-size: 15px;
 }
 
 .label {
@@ -91,7 +107,7 @@ body {
 }
 
 .header > h3 {
-  flex: 1;
+  /* flex: 1; */
   padding-left: 10px;
 }
 
@@ -187,4 +203,15 @@ body {
 
 .action.action-0:hover {
   background-color: #99FF99;
+}
+
+.icon-c {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0 5px;
+}
+
+.pointer {
+  cursor: pointer;
 }
